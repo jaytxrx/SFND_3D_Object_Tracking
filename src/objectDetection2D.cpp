@@ -121,6 +121,34 @@ void detectObjects(cv::Mat& img, std::vector<BoundingBox>& bBoxes, float confThr
             
         }
         
+#if 0 //set to 1 to store images. Later convert those to gif animation
+        bool result = false;
+        static int count = 0; //static needed for count not to reset
+
+        std::ostringstream filename;
+        filename << "img" <<count<<".png";
+
+        vector<int> compression_params;
+        compression_params.push_back(cv::IMWRITE_PNG_COMPRESSION);
+        compression_params.push_back(9);
+
+        try
+        {
+           result = cv::imwrite(filename.str(), visImg, compression_params);
+
+            if (result)
+                printf("Saved PNG file with alpha data.\n");
+            else
+                printf("ERROR: Can't save PNG file.\n");
+        }
+        catch (const cv::Exception& ex)
+        {
+            fprintf(stderr, "Exception converting image to PNG format: %s\n", ex.what());
+        }
+
+        count++;
+#endif
+
         string windowName = "Object classification";
         cv::namedWindow( windowName, 1 );
         cv::imshow( windowName, visImg );

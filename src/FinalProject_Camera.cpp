@@ -87,6 +87,8 @@ int main(int argc, const char *argv[])
 
         // load image from file 
         cv::Mat img = cv::imread(imgFullFilename);
+        //Note: The images for Yolo are not converted to grayscale becuase they dont perform well.
+        //Yolo was trained in colour images. If you remove colour, performance is lost
 
         // push image into data frame buffer
         DataFrame frame;
@@ -97,6 +99,7 @@ int main(int argc, const char *argv[])
 
 
         /* DETECT & CLASSIFY OBJECTS */
+        bVis = false; //to view the bounding boxes
 
         float confThreshold = 0.2;
         float nmsThreshold = 0.4;        
@@ -129,10 +132,11 @@ int main(int argc, const char *argv[])
         clusterLidarWithROI((dataBuffer.end()-1)->boundingBoxes, (dataBuffer.end() - 1)->lidarPoints, shrinkFactor, P_rect_00, R_rect_00, RT);
 
         // Visualize 3D objects
-        bVis = true;
+        bVis = false;
         if(bVis)
         {
-            show3DObjects((dataBuffer.end()-1)->boundingBoxes, cv::Size(4.0, 20.0), cv::Size(2000, 2000), true);
+            //show3DObjects((dataBuffer.end()-1)->boundingBoxes, cv::Size(4.0, 20.0), cv::Size(2000, 2000), true);
+            show3DObjects((dataBuffer.end()-1)->boundingBoxes, cv::Size(4.0, 20.0), cv::Size(1000, 1000), true);
         }
         bVis = false;
 
@@ -140,7 +144,7 @@ int main(int argc, const char *argv[])
         
         
         // REMOVE THIS LINE BEFORE PROCEEDING WITH THE FINAL PROJECT
-        continue; // skips directly to the next image without processing what comes beneath
+        //continue; // skips directly to the next image without processing what comes beneath
 
         /* DETECT IMAGE KEYPOINTS */
 
@@ -212,7 +216,6 @@ int main(int argc, const char *argv[])
 
             cout << "#7 : MATCH KEYPOINT DESCRIPTORS done" << endl;
 
-            
             /* TRACK 3D OBJECT BOUNDING BOXES */
 
             //// STUDENT ASSIGNMENT
@@ -277,6 +280,34 @@ int main(int argc, const char *argv[])
                         char str[200];
                         sprintf(str, "TTC Lidar : %f s, TTC Camera : %f s", ttcLidar, ttcCamera);
                         putText(visImg, str, cv::Point2f(80, 50), cv::FONT_HERSHEY_PLAIN, 2, cv::Scalar(0,0,255));
+
+#if 0 //set to 1 to store images. Later convert those to gif animation
+        bool result = false;
+        static int count = 0; //static needed for count not to reset
+
+        std::ostringstream filename;
+        filename << "img" <<count<<".png";
+
+        vector<int> compression_params;
+        compression_params.push_back(cv::IMWRITE_PNG_COMPRESSION);
+        compression_params.push_back(9);
+
+        try
+        {
+           result = cv::imwrite(filename.str(), visImg, compression_params);
+
+            if (result)
+                printf("Saved PNG file with alpha data.\n");
+            else
+                printf("ERROR: Can't save PNG file.\n");
+        }
+        catch (const cv::Exception& ex)
+        {
+            fprintf(stderr, "Exception converting image to PNG format: %s\n", ex.what());
+        }
+
+        count++;
+#endif
 
                         string windowName = "Final Results : TTC";
                         cv::namedWindow(windowName, 4);
