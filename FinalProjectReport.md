@@ -46,7 +46,7 @@ In this section we need to find if a keypoint is inside the provided bounding bo
 
 ### FP.4 : Compute Camera-based TTC
 
-<img src="report-files/BoundingBox.gif" />
+<img src="report-files/TTC.gif" />
 
 To compute the distance from camera images, distance between each of the keypoint is computed form the current and the previous frame. Their distance ratio can used to calculate the TTC. As there are multiple keypoints, there will be multiple distance ration. Median of the distance ratio is used to reduce the error caused by outliers. At the end TTC is computed with the median distance ratio using the formula `TTC = -dT / (1 - medDistRatio);`
 
