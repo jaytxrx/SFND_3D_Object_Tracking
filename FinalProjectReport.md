@@ -52,8 +52,49 @@ To compute the distance from camera images, distance between each of the keypoin
 
 ### FP.5 : Performance Evaluation 1
 
+While visualising the top view of the lidar points, it was not possible to see many outliers. All lidar points were close by. Also tried mean and median based TTC calculation and was not able to find major differences.
+
 ### FP.6 : Performance Evaluation 2
+
+Below table was created using the following steps
+1) For each entries in [CSV file](report-files/report.csv), the difference between *TTC Lidar* and *TTC Camera* was calculated.
+Note that *NAN* and *-inf* rows were deleted
+2) The sum of the differences for detector/descriptor is updated in *Diff* column
+3) *Diff* column was arranged in ascending order
+
+Based on the below table, ***AZAKE/BRISK*** is the best detector descriptor combination
+
+| Detector Type | Descriptor Type | Diff    |
+|---------------|-----------------|---------|
+| AKAZE         | BRISK           | 16.516  |
+| AKAZE         | BRIEF           | 16.0164 |
+| AKAZE         | SIFT            | 16.9908 |
+| AKAZE         | FREAK           | 17.0215 |
+| AKAZE         | ORB             | 16.4344 |
+| SHITOMASI     | FREAK           | 16.6747 |
+| SIFT          | SIFT            | 16.3586 |
+| HARRIS        | SIFT            | 15.85   |
+| SIFT          | BRISK           | 16.644  |
+| SHITOMASI     | BRIEF           | 15.6108 |
+| SHITOMASI     | SIFT            | 14.8138 |
+| SHITOMASI     | ORB             | 14.4815 |
+| SHITOMASI     | BRISK           | 14.313  |
+| SIFT          | BRIEF           | 13.3283 |
+| SIFT          | FREAK           | 11.7047 |
+| HARRIS        | FREAK           | 9.5189  |
+| FAST          | SIFT            | 9.0764  |
+| HARRIS        | BRIEF           | 9.0114  |
+| ORB           | FREAK           | 8.6231  |
+| HARRIS        | ORB             | 8.5131  |
+| FAST          | FREAK           | 7.524   |
+| HARRIS        | BRISK           | 7.165   |
+| FAST          | BRIEF           | 6.9426  |
+| FAST          | ORB             | 4.7172  |
+| FAST          | BRISK           | 3.7157  |
+| BRISK         | BRIEF           | 2.1931  |
+| BRISK         | FREAK           | 0.8253  |
 
 
 #### References
 * [Image to GIF conversion](https://askubuntu.com/questions/648244/how-do-i-create-an-animated-gif-from-still-images-preferably-with-the-command-l#:~:text=From%20GIMP%20go%20to%20File,to%20the%20GIF%20export%20options.)
+* [CSV to markdown website](https://thisdavej.com/copy-table-in-excel-and-paste-as-a-markdown-table/)

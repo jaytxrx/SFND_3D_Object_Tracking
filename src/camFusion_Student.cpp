@@ -245,7 +245,39 @@ void computeTTCLidar(std::vector<LidarPoint> &lidarPointsPrev,
 
     // compute TTC from both measurements
     TTC = avgCurr * dT / (avgPrev - avgCurr);
-    cout <<"TTC is " <<TTC<<endl;
+
+#if 0 //median implementation
+
+    vector<double> lidarPrevValues, lidarCurrValues;
+    long medianIndex;
+
+    for (auto it = lidarPointsPrev.begin(); it != lidarPointsPrev.end(); ++it)
+    {
+        if(abs(it->y) <= (laneWidth/2))
+            lidarPrevValues.push_back(it->x);
+    }
+
+    for (auto it = lidarPointsCurr.begin(); it != lidarPointsCurr.end(); ++it)
+    {
+        if(abs(it->y) <= (laneWidth/2))
+            lidarCurrValues.push_back(it->x);
+    }
+
+    //sort them for calculating median
+    sort(lidarPrevValues.begin(), lidarPrevValues.end());
+    sort(lidarCurrValues.begin(), lidarCurrValues.end());
+
+    medianIndex = lidarPrevValues.size()/2;
+    double medLidPrevVal = (lidarPrevValues.size() % 2 == 0) ? ((lidarPrevValues[medianIndex-1]+lidarPrevValues[medianIndex])/2) : lidarPrevValues[medianIndex];
+
+    medianIndex = lidarCurrValues.size()/2;
+    double medLidCurrVal = (lidarCurrValues.size() % 2 == 0) ? ((lidarCurrValues[medianIndex-1]+lidarCurrValues[medianIndex])/2) : lidarCurrValues[medianIndex];
+
+    // compute TTC from both measurements
+    TTC = medLidCurrVal * dT / (medLidPrevVal - medLidCurrVal);
+#endif
+
+    //cout <<"Lidar TTC is " <<TTC<<endl;
 }
 
 

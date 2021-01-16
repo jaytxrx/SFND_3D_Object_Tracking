@@ -19,6 +19,8 @@
 
 #include "dataStructures.h"
 
+//comment the below line of midterm evaluation loop needs to be deactivated
+//#define FINAL_ASSIGNMENT
 
 void detKeypointsHarris(std::vector<cv::KeyPoint> &keypoints, cv::Mat &img, bool bVis=false);
 void detKeypointsShiTomasi(std::vector<cv::KeyPoint> &keypoints, cv::Mat &img, bool bVis=false);

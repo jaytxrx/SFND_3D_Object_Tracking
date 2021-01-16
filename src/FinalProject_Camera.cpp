@@ -74,6 +74,32 @@ int main(int argc, const char *argv[])
     vector<DataFrame> dataBuffer; // list of data frames which are held in memory at the same time
     bool bVis = false;            // visualize results
 
+#ifdef FINAL_ASSIGNMENT
+    //For MidTerm Project Evaluation MP.7, MP.8, and MP.9
+    vector<string> detector_type_names = {"SHITOMASI", "HARRIS", "FAST", "BRISK", "ORB", "AKAZE", "SIFT"};
+    vector<string> descriptor_type_names = {"BRISK", "BRIEF", "ORB", "FREAK", "AKAZE", "SIFT"};
+
+    vector<int> kptsVehicle;
+    vector<int> matchedKpts;
+
+    cout<<"Detector Type,Descriptor Type,TTC Lidar, TTC Camera"<< endl;
+
+    for(auto detector_type_name:detector_type_names) // start loop detector_types
+    {
+        for(auto descriptor_type_name:descriptor_type_names) // start loop descriptor_types
+        {
+            if(detector_type_name.compare("AKAZE")!=0 && descriptor_type_name.compare("AKAZE")==0)
+                continue; //N/A
+
+            if(detector_type_name.compare("AKAZE")==0 && descriptor_type_name.compare("AKAZE")==0)
+                continue;
+
+            if(detector_type_name.compare("SIFT")==0 && descriptor_type_name.compare("ORB")==0)
+                continue; //out of memory issue
+
+            dataBuffer.clear(); //start from a fresh image buffer
+#endif
+
     /* MAIN LOOP OVER ALL IMAGES */
 
     for (size_t imgIndex = 0; imgIndex <= imgEndIndex - imgStartIndex; imgIndex+=imgStepWidth)
@@ -95,8 +121,9 @@ int main(int argc, const char *argv[])
         frame.cameraImg = img;
         dataBuffer.push_back(frame);
 
+#ifndef FINAL_ASSIGNMENT
         cout << "#1 : LOAD IMAGE INTO BUFFER done" << endl;
-
+#endif
 
         /* DETECT & CLASSIFY OBJECTS */
         bVis = false; //to view the bounding boxes
@@ -106,8 +133,9 @@ int main(int argc, const char *argv[])
         detectObjects((dataBuffer.end() - 1)->cameraImg, (dataBuffer.end() - 1)->boundingBoxes, confThreshold, nmsThreshold,
                       yoloBasePath, yoloClassesFile, yoloModelConfiguration, yoloModelWeights, bVis);
 
+#ifndef FINAL_ASSIGNMENT
         cout << "#2 : DETECT & CLASSIFY OBJECTS done" << endl;
-
+#endif
 
         /* CROP LIDAR POINTS */
 
@@ -122,8 +150,9 @@ int main(int argc, const char *argv[])
     
         (dataBuffer.end() - 1)->lidarPoints = lidarPoints;
 
+#ifndef FINAL_ASSIGNMENT
         cout << "#3 : CROP LIDAR POINTS done" << endl;
-
+#endif
 
         /* CLUSTER LIDAR POINT CLOUD */
 
@@ -140,7 +169,9 @@ int main(int argc, const char *argv[])
         }
         bVis = false;
 
+#ifndef FINAL_ASSIGNMENT
         cout << "#4 : CLUSTER LIDAR POINT CLOUD done" << endl;
+#endif
         
         
         // REMOVE THIS LINE BEFORE PROCEEDING WITH THE FINAL PROJECT
@@ -154,15 +185,25 @@ int main(int argc, const char *argv[])
 
         // extract 2D keypoints from current image
         vector<cv::KeyPoint> keypoints; // create empty feature list for current image
+
+#ifdef FINAL_ASSIGNMENT
+        string detectorType = detector_type_name;
+#else
         string detectorType = "SHITOMASI";
+#endif
 
         if (detectorType.compare("SHITOMASI") == 0)
         {
             detKeypointsShiTomasi(keypoints, imgGray, false);
         }
+        else if (detectorType.compare("HARRIS") == 0)
+        {
+            detKeypointsHarris(keypoints, imgGray, false);
+        }
         else
         {
-            //...
+            /* FAST, BRISK, ORB, AKAZE, SIFT */
+            detKeypointsModern(keypoints, imgGray, detectorType, false);
         }
 
         // optional : limit number of keypoints (helpful for debugging and learning)
@@ -176,25 +217,37 @@ int main(int argc, const char *argv[])
                 keypoints.erase(keypoints.begin() + maxKeypoints, keypoints.end());
             }
             cv::KeyPointsFilter::retainBest(keypoints, maxKeypoints);
+#ifndef FINAL_ASSIGNMENT
             cout << " NOTE: Keypoints have been limited!" << endl;
+#endif
         }
 
         // push keypoints and descriptor for current frame to end of data buffer
         (dataBuffer.end() - 1)->keypoints = keypoints;
 
+#ifndef FINAL_ASSIGNMENT
         cout << "#5 : DETECT KEYPOINTS done" << endl;
+#endif
 
 
         /* EXTRACT KEYPOINT DESCRIPTORS */
 
         cv::Mat descriptors;
+
+#ifdef FINAL_ASSIGNMENT
+        string descriptorType = descriptor_type_name;
+#else
         string descriptorType = "BRISK"; // BRISK, BRIEF, ORB, FREAK, AKAZE, SIFT
+#endif
+
         descKeypoints((dataBuffer.end() - 1)->keypoints, (dataBuffer.end() - 1)->cameraImg, descriptors, descriptorType);
 
         // push descriptors for current frame to end of data buffer
         (dataBuffer.end() - 1)->descriptors = descriptors;
 
+#ifndef FINAL_ASSIGNMENT
         cout << "#6 : EXTRACT DESCRIPTORS done" << endl;
+#endif
 
 
         if (dataBuffer.size() > 1) // wait until at least two images have been processed
@@ -204,17 +257,30 @@ int main(int argc, const char *argv[])
 
             vector<cv::DMatch> matches;
             string matcherType = "MAT_BF";        // MAT_BF, MAT_FLANN
-            string descriptorType = "DES_BINARY"; // DES_BINARY, DES_HOG
-            string selectorType = "SEL_NN";       // SEL_NN, SEL_KNN
+            //below line comment to avoid confusion. New name is descriptorClass
+            //string descriptorType = "DES_BINARY"; // DES_BINARY, DES_HOG
+            string selectorType = "SEL_KNN";       // SEL_NN, SEL_KNN
+
+            string descriptorClass{};
+            if (descriptorType.compare("SIFT")==0) 
+            {
+                descriptorClass = "DES_HOG";
+            } 
+            else 
+            {
+                descriptorClass = "DES_BINARY";
+            }
 
             matchDescriptors((dataBuffer.end() - 2)->keypoints, (dataBuffer.end() - 1)->keypoints,
                              (dataBuffer.end() - 2)->descriptors, (dataBuffer.end() - 1)->descriptors,
-                             matches, descriptorType, matcherType, selectorType);
+                             matches, descriptorClass, matcherType, selectorType);
 
             // store matches in current data frame
             (dataBuffer.end() - 1)->kptMatches = matches;
 
+#ifndef FINAL_ASSIGNMENT
             cout << "#7 : MATCH KEYPOINT DESCRIPTORS done" << endl;
+#endif
 
             /* TRACK 3D OBJECT BOUNDING BOXES */
 
@@ -227,8 +293,9 @@ int main(int argc, const char *argv[])
             // store matches in current data frame
             (dataBuffer.end()-1)->bbMatches = bbBestMatches;
 
+#ifndef FINAL_ASSIGNMENT
             cout << "#8 : TRACK 3D OBJECT BOUNDING BOXES done" << endl;
-
+#endif
 
             /* COMPUTE TTC ON OBJECT IN FRONT */
 
@@ -270,6 +337,7 @@ int main(int argc, const char *argv[])
                     computeTTCCamera((dataBuffer.end() - 2)->keypoints, (dataBuffer.end() - 1)->keypoints, currBB->kptMatches, sensorFrameRate, ttcCamera);
                     //// EOF STUDENT ASSIGNMENT
 
+#ifndef FINAL_ASSIGNMENT
                     bVis = true;
                     if (bVis)
                     {
@@ -316,13 +384,24 @@ int main(int argc, const char *argv[])
                         cv::waitKey(0);
                     }
                     bVis = false;
+#endif
+
+#ifdef FINAL_ASSIGNMENT
+                cout<<detector_type_name<<","<<descriptor_type_name<<","<< ttcLidar<<","<< ttcCamera<< endl;
+#endif
 
                 } // eof TTC computation
+
             } // eof loop over all BB matches            
 
         }
 
     } // eof loop over all images
+
+#ifdef FINAL_ASSIGNMENT
+        } // end loop descriptor_types
+    } // end loop detector_types
+#endif
 
     return 0;
 }
